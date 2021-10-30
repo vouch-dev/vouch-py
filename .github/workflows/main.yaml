@@ -45,7 +45,20 @@ jobs:
           echo ::set-output name=NAME::vouch-py
           echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
 
-      - uses: actions/checkout@v2
+      - name: Get subject repository
+        uses: actions/checkout@v2
+        with:
+          repository: vouch-dev/${{ steps.meta.outputs.NAME }}
+          fetch-depth: 1
+          path: ${{ steps.meta.outputs.NAME }}
+
+      - name: Get vouch-lib
+        uses: actions/checkout@v2
+        with:
+          repository: 'vouch-dev/vouch'
+          fetch-depth: 1
+          path: vouch
+
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -55,21 +68,22 @@ jobs:
         if: "contains(matrix.target, 'x86_64-unknown-linux-musl')"
         run: |
           docker pull clux/muslrust
-          docker run -v $PWD:/volume --rm -t clux/muslrust cargo build --release --all-features --locked --verbose --package ${{ steps.meta.outputs.NAME }}
+          docker run -v $PWD:/volume --workdir /volume/${{ steps.meta.outputs.NAME }} -t clux/muslrust cargo build --release --all-features --locked --verbose --package ${{ steps.meta.outputs.NAME }}
 
       - name: Build non-musl
         if: "!contains(matrix.target, 'x86_64-unknown-linux-musl')"
         env:
           OPENSSL_STATIC: yes
-        uses: actions-rs/cargo@v1
+        uses: marcopolo/cargo@master
         with:
           command: build
           args: --release --locked --all-features --verbose --package ${{ steps.meta.outputs.NAME }} --target ${{ matrix.target }}
+          working-directory: ${{ steps.meta.outputs.NAME }}
 
       - name: Archive release assets
         id: archive_assets
         run: |
-          7z a -tzip ${{ github.workspace }}/${{ steps.meta.outputs.NAME }}-${{ steps.meta.outputs.VERSION }}-${{ matrix.target }}.zip ${{ github.workspace }}/target/${{ matrix.target }}/release/${{ steps.meta.outputs.NAME }}* ${{ github.workspace }}/LICENSE
+          7z a -tzip ${{ github.workspace }}/${{ steps.meta.outputs.NAME }}-${{ steps.meta.outputs.VERSION }}-${{ matrix.target }}.zip ${{ github.workspace }}/${{ steps.meta.outputs.NAME }}/target/${{ matrix.target }}/release/${{ steps.meta.outputs.NAME }}* ${{ github.workspace }}/${{ steps.meta.outputs.NAME }}/LICENSE
 
       - name: Upload release archive
         id: upload_archive
