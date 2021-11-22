@@ -68,8 +68,14 @@ impl vouch_lib::extension::Extension for PyExtension {
     fn registries_package_metadata(
         &self,
         package_name: &str,
-        package_version: &str,
+        package_version: &Option<&str>,
     ) -> Result<Vec<vouch_lib::extension::RegistryPackageMetadata>> {
+        let package_version = match package_version {
+            Some(v) => Some(v.to_string()),
+            None => get_latest_version(&package_name)?,
+        }
+        .ok_or(format_err!("Failed to find package version."))?;
+
         // Currently, only one registry is supported. Therefore simply select first.
         let registry_host_name = self
             .registries()
@@ -88,8 +94,28 @@ impl vouch_lib::extension::Extension for PyExtension {
             human_url: human_url.to_string(),
             artifact_url: artifact_url.to_string(),
             is_primary: true,
+            package_version: package_version.to_string(),
         }])
     }
+}
+
+/// Given package name, return latest version.
+fn get_latest_version(package_name: &str) -> Result<Option<String>> {
+    let json = get_registry_entry_json(&package_name)?;
+    let releases = json["releases"]
+        .as_object()
+        .ok_or(format_err!("Failed to find releases JSON section."))?;
+    let mut versions: Vec<semver::Version> = releases
+        .keys()
+        .filter(|v| v.chars().all(|c| c.is_numeric() || c == '.'))
+        .map(|v| semver::Version::parse(v))
+        .filter(|v| v.is_ok())
+        .map(|v| v.unwrap())
+        .collect();
+    versions.sort();
+
+    let latest_version = versions.last().map(|v| v.to_string());
+    Ok(latest_version)
 }
 
 fn get_registry_human_url(

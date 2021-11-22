@@ -936,6 +936,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "semver"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "568a8e6258aa33c13358f81fd834adb854c6f7c9468520910a9b1e8fac068012"
+
+[[package]]
 name = "serde"
 version = "1.0.125"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1290,7 +1296,7 @@ checksum = "5fecdca9a5291cc2b8dcf7dc02453fee791a280f3743cb0905f8822ae463b3fe"
 
 [[package]]
 name = "vouch-lib"
-version = "0.2.5"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "serde",
@@ -1302,12 +1308,13 @@ dependencies = [
 
 [[package]]
 name = "vouch-py"
-version = "0.2.4"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "handlebars",
  "maplit",
  "reqwest",
+ "semver",
  "serde",
  "serde_json",
  "structopt",
