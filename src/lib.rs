@@ -38,6 +38,7 @@ impl vouch_lib::extension::Extension for PyExtension {
     fn identify_local_dependencies(
         &self,
         working_directory: &std::path::PathBuf,
+        _extension_args: &Vec<String>,
     ) -> Result<Vec<vouch_lib::extension::DependenciesSpec>> {
         // Identify all dependency definition files.
         let dependency_files = match identify_dependency_files(&working_directory) {
