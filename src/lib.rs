@@ -35,11 +35,11 @@ impl vouch_lib::extension::Extension for PyExtension {
         self.registry_host_names_.clone()
     }
 
-    fn identify_local_dependencies(
+    fn identify_file_defined_dependencies(
         &self,
         working_directory: &std::path::PathBuf,
         _extension_args: &Vec<String>,
-    ) -> Result<Vec<vouch_lib::extension::DependenciesSpec>> {
+    ) -> Result<Vec<vouch_lib::extension::FileDefinedDependencies>> {
         // Identify all dependency definition files.
         let dependency_files = match identify_dependency_files(&working_directory) {
             Some(v) => v,
@@ -56,7 +56,7 @@ impl vouch_lib::extension::Extension for PyExtension {
                     pipfile::get_registry_host_name(),
                 ),
             };
-            all_dependency_specs.push(vouch_lib::extension::DependenciesSpec {
+            all_dependency_specs.push(vouch_lib::extension::FileDefinedDependencies {
                 path: dependency_file.path,
                 registry_host_name: registry_host_name,
                 dependencies: dependencies.into_iter().collect(),
